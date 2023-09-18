@@ -22,7 +22,7 @@ def create_starting_header_part(file_paths: list[str]) -> bytes:
 
 
 def create_extra_fields_header_part() -> bytes:
-    extra_fields_amount = pack('H', 0)
+    extra_fields_amount = pack('B', 0)
     # some code in future
 
     return extra_fields_amount
@@ -31,7 +31,7 @@ def create_extra_fields_header_part() -> bytes:
 def create_file_header_part(file_path: str) -> bytes:
     relative_path = file_path.encode('utf-8')
     relative_path_length = pack('H', len(relative_path))
-    file_size = pack('Q', path.getsize(file_path))
+    file_size = pack('I', path.getsize(file_path))
 
     with open(file_path, 'rb') as f:
         file_content = f.read()
@@ -40,7 +40,7 @@ def create_file_header_part(file_path: str) -> bytes:
 
 
 def encode(file_paths: list[str], archive_path: str) -> None:
-    with open(archive_path, 'wb') as archive:
+    with open(archive_path, 'a+b') as archive:
         starting_header_part = create_starting_header_part(file_paths)
         archive.write(starting_header_part)
 
@@ -48,5 +48,6 @@ def encode(file_paths: list[str], archive_path: str) -> None:
             file_header_part = create_file_header_part(file_path)
             archive.write(file_header_part)
 
+        archive.seek(0)
         checksum = pack('I', crc32(archive.read()))
         archive.write(checksum)
