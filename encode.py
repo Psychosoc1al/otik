@@ -2,18 +2,18 @@ from os import path
 from struct import pack
 from zlib import crc32
 
-from main import SIGNATURE
+from constants import SIGNATURE, VERSION
 
 
 # struct packing directives:
-#       B for unsigned char,       1 byte
-#       H for unsigned short,      2 bytes
-#       I for unsigned int,        4 bytes
+#       B for unsigned char,    1 byte
+#       H for unsigned short,   2 bytes
+#       I for unsigned int,     4 bytes
 
 
 def create_starting_header_part(file_paths: list[str]) -> bytes:
     signature = SIGNATURE
-    version = pack('B', 1)
+    version = pack('B', VERSION)
     algorithms_codes = pack('B', 0)
     extra_fields_data = create_extra_fields_header_part()
     file_count = pack('H', len(file_paths))

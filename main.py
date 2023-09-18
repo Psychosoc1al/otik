@@ -1,7 +1,6 @@
 from decode import decode
 from encode import encode
 
-SIGNATURE = b'PIN34MPR'
 
 if __name__ == '__main__':
     action = input("Encode or Decode? (e/d): ")

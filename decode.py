@@ -3,13 +3,13 @@ from struct import unpack
 from typing import BinaryIO
 from zlib import crc32
 
-from main import SIGNATURE
+from constants import SIGNATURE
 
 
 # struct packing directives:
-#       B for unsigned char,       1 byte
-#       H for unsigned short,      2 bytes
-#       I for unsigned int,        4 bytes
+#       B for unsigned char,    1 byte
+#       H for unsigned short,   2 bytes
+#       I for unsigned int,     4 bytes
 
 
 def check_hashsum(archive: BinaryIO) -> bool:
