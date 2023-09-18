@@ -7,10 +7,10 @@ if __name__ == '__main__':
     action = input("Encode or Decode? (e/d): ")
 
     if action == 'e':
-        file_paths_arg = input("Enter file [full or relative] paths separated by vertical bar (|): ").split('|')
-        archive_path_arg = input("Enter archive [full or relative] path: ")
-        encode(file_paths_arg, archive_path_arg)
+        file_paths = input("Enter file [full or relative] paths separated by vertical bar (|): ").split('|')
+        archive_path = input("Enter archive [full or relative] path: ")
+        encode(file_paths, archive_path)
     elif action == 'd':
-        archive_path_arg = input("Enter archive [full or relative] path: ")
-        output_folder_arg = input("Enter output folder [full or relative] path: ")
-        decode(archive_path_arg, output_folder_arg)
+        archive_path = input("Enter archive [full or relative] path: ")
+        output_folder = input("Enter output folder [full or relative] path: ")
+        decode(archive_path, output_folder)
