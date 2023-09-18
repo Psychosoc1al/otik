@@ -34,6 +34,16 @@ def check_signature(signature: bytes) -> bool:
     return True
 
 
+def check_algorithms_codes(algorithms_codes: int, allowed_algorithms_codes: int) -> bool:
+    # allowed_algorithms_codes is an integer with binary like 00011001 which is concatenated of algorithms codes:
+    # algorithm X is 0001 and algorithm Y is 1001 which gives 00011001
+    if algorithms_codes != allowed_algorithms_codes:
+        print("Invalid algorithms codes")
+        return False
+
+    return True
+
+
 def read_starting_header_part(archive: BinaryIO) -> tuple[bytes, int, int, int, int]:
     signature = archive.read(8)
     version = unpack('B', archive.read(1))[0]
@@ -71,9 +81,12 @@ def decode(archive_path: str, output_folder: str) -> None:
         if not check_hashsum(archive):
             return
 
-        signature, _, _, _, file_count = read_starting_header_part(archive)
+        signature, _, algorithms_codes, _, file_count = read_starting_header_part(archive)
 
         if not check_signature(signature):
+            return
+
+        if not check_algorithms_codes(algorithms_codes, 0):
             return
 
         for _ in range(file_count):
