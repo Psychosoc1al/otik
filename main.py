@@ -56,17 +56,18 @@ def encode(file_paths: list[str], archive_path: str) -> None:
 
 # Decoding part
 
-def check_hashsum(archive_path: str) -> bool:
-    with open(archive_path, 'rb') as archive:
-        archive_content = archive.read()
-        archive_checksum = unpack('I', archive_content[-4:])[0]
-        new_checksum = crc32(archive_content[:-4])
+def check_hashsum(archive: BinaryIO) -> bool:
+    archive.seek(-4, 2)
+    archive_checksum = unpack('I', archive.read(4))[0]
+    archive.seek(0)
+    new_checksum = crc32(archive.read()[:-4])
+    archive.seek(0)
 
-        if archive_checksum != new_checksum:
-            print("Invalid checksum")
-            return False
+    if archive_checksum != new_checksum:
+        print("Invalid checksum")
+        return False
 
-        return True
+    return True
 
 
 def check_signature(signature: bytes) -> bool:
@@ -110,10 +111,11 @@ def unpack_and_save_file(archive: BinaryIO, output_folder: str) -> None:
 
 
 def decode(archive_path: str, output_folder: str) -> None:
-    if not check_hashsum(archive_path):
-        return
 
     with open(archive_path, 'rb') as archive:
+        if not check_hashsum(archive):
+            return
+
         signature, _, _, _, file_count = read_starting_header_part(archive)
 
         if not check_signature(signature):
