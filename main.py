@@ -3,9 +3,9 @@ from struct import pack, unpack
 from zlib import crc32
 
 
-# struct directives: H for unsigned short, 2 bytes
-#                    I for unsigned int, 4 bytes
-#                    Q for unsigned long long, 8 bytes
+# struct directives: H for unsigned short,      2 bytes
+#                    I for unsigned int,        4 bytes
+#                    Q for unsigned long long,  8 bytes
 
 def create_starting_header_part(file_paths: list[str]) -> bytes:
     signature = b'PIN34MPR'
@@ -71,11 +71,12 @@ def decode(archive_path: str, output_folder: str) -> None:
 
 if __name__ == '__main__':
     action = input("Encode or Decode? (e/d): ")
+
     if action == 'e':
-        file_paths_arg = input("Enter file paths separated by comma: ").split(',')
-        archive_path_arg = input("Enter archive path: ")
+        file_paths_arg = input("Enter file [full or relative] paths separated by vertical bar (|): ").split('|')
+        archive_path_arg = input("Enter archive [full or relative] path: ")
         encode(file_paths_arg, archive_path_arg)
     elif action == 'd':
-        archive_path_arg = input("Enter archive path: ")
-        output_folder_arg = input("Enter output folder: ")
+        archive_path_arg = input("Enter archive [full or relative] path: ")
+        output_folder_arg = input("Enter output folder [full or relative] path: ")
         decode(archive_path_arg, output_folder_arg)
