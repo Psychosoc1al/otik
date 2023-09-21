@@ -43,7 +43,9 @@ def preprocess_files_and_folders(file_paths: set[str]) -> set[tuple[str, str]]:
 
     for file_path in file_paths:
         if path.isfile(file_path):
-            preprocessed_file_paths.add(path.basename(file_path))
+            preprocessed_file_paths.add(
+                (path.basename(file_path), file_path)
+            )
 
         elif path.isdir(file_path):
             base_folder = file_path.replace(path.basename(file_path), '')
