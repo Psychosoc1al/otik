@@ -11,7 +11,7 @@ from constants import SIGNATURE, VERSION
 #       I for unsigned int,     4 bytes
 
 
-def create_starting_header_part(file_paths: set[str]) -> bytes:
+def create_starting_header_part(file_paths: set[tuple[str, str]]) -> bytes:
     signature = SIGNATURE
     version = pack('B', VERSION)
     algorithms_codes = pack('B', 0)
@@ -29,7 +29,7 @@ def create_extra_fields_header_part() -> bytes:
 
 
 # divides folders into files, converts paths to relative
-def preprocess_files_and_folders(file_paths: set[str]) -> set[str]:
+def preprocess_files_and_folders(file_paths: set[str]) -> set[tuple[str, str]]:
     preprocessed_file_paths = set()
 
     for file_path in file_paths:
@@ -41,32 +41,34 @@ def preprocess_files_and_folders(file_paths: set[str]) -> set[str]:
             for root, dirs, files in walk(file_path):
                 for file in files:
                     full_path = path.join(root, file)
-                    preprocessed_file_paths.add(path.relpath(full_path, base_folder))
+                    preprocessed_file_paths.add(
+                        (path.relpath(full_path, base_folder), full_path)
+                    )
 
-    print(*preprocessed_file_paths, sep='\n')
     return preprocessed_file_paths
 
 
-def create_file_header_part(file_path: str) -> bytes:
-    relative_path = file_path.encode('utf-8')
+def create_file_header_part(file_info: tuple[str, str]) -> bytes:
+    relative_path, full_path = file_info
+    relative_path = relative_path.encode('utf-8')
     relative_path_length = pack('H', len(relative_path))
-    file_size = pack('I', path.getsize(file_path))
+    file_size = pack('I', path.getsize(full_path))
 
-    with open(file_path, 'rb') as f:
+    with open(full_path, 'rb') as f:
         file_content = f.read()
 
     return relative_path_length + relative_path + file_size + file_content
 
 
-def encode(file_paths: set[str], archive_path: str) -> None:
-    file_paths = preprocess_files_and_folders(file_paths)
+def encode(files_paths: set[str], archive_path: str) -> None:
+    files_info = preprocess_files_and_folders(files_paths)
 
     with open(archive_path, 'a+b') as archive:
-        starting_header_part = create_starting_header_part(file_paths)
+        starting_header_part = create_starting_header_part(files_info)
         archive.write(starting_header_part)
 
-        for file_path in file_paths:
-            file_header_part = create_file_header_part(file_path)
+        for file_info in files_info:
+            file_header_part = create_file_header_part(file_info)
             archive.write(file_header_part)
 
         archive.seek(0)
