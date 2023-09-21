@@ -11,6 +11,15 @@ from constants import SIGNATURE, VERSION
 #       I for unsigned int,     4 bytes
 
 
+def check_input(file_paths: set[str]) -> bool:
+    for file_path in file_paths:
+        if not path.exists(file_path):
+            print(f'Invalid file/folder path: {file_path}')
+            return False
+
+    return True
+
+
 def create_starting_header_part(file_paths: set[tuple[str, str]]) -> bytes:
     signature = SIGNATURE
     version = pack('B', VERSION)
@@ -61,6 +70,9 @@ def create_file_header_part(file_info: tuple[str, str]) -> bytes:
 
 
 def encode(files_paths: set[str], archive_path: str) -> None:
+    if not check_input(files_paths):
+        return
+
     files_info = preprocess_files_and_folders(files_paths)
 
     with open(archive_path, 'a+b') as archive:

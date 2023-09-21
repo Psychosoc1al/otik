@@ -12,6 +12,14 @@ from constants import SIGNATURE
 #       I for unsigned int,     4 bytes
 
 
+def check_input(archive_path: str) -> bool:
+    if not path.exists(archive_path):
+        print(f'Invalid archive path: {archive_path}')
+        return False
+
+    return True
+
+
 def check_hashsum(archive: BinaryIO) -> bool:
     archive.seek(-4, 2)
     archive_checksum = unpack('I', archive.read(4))[0]
@@ -20,7 +28,7 @@ def check_hashsum(archive: BinaryIO) -> bool:
     archive.seek(0)
 
     if archive_checksum != new_checksum:
-        print("Invalid checksum")
+        print('Invalid checksum')
         return False
 
     return True
@@ -28,7 +36,7 @@ def check_hashsum(archive: BinaryIO) -> bool:
 
 def check_signature(signature: bytes) -> bool:
     if signature != SIGNATURE:
-        print("Invalid signature")
+        print('Invalid signature')
         return False
 
     return True
@@ -38,7 +46,7 @@ def check_algorithms_codes(algorithms_codes: int, allowed_algorithms_codes: int)
     # allowed_algorithms_codes is an integer with binary like 00011001 which is concatenated of algorithms codes:
     # algorithm X is 0001 and algorithm Y is 1001 which gives 00011001
     if algorithms_codes != allowed_algorithms_codes:
-        print("Invalid algorithms codes")
+        print('Invalid algorithms codes')
         return False
 
     return True
@@ -77,6 +85,9 @@ def unpack_and_save_file(archive: BinaryIO, output_folder: str) -> None:
 
 
 def decode(archive_path: str, output_folder: str) -> None:
+    if not check_input(archive_path):
+        return
+
     with open(archive_path, 'rb') as archive:
         if not check_hashsum(archive):
             return
