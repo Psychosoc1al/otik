@@ -75,13 +75,17 @@ def read_extra_fields_header_part(archive: BinaryIO) -> int:
 def unpack_and_save_file(archive: BinaryIO, output_folder: str) -> None:
     relative_path_length = unpack('H', archive.read(2))[0]
     relative_path = archive.read(relative_path_length).decode('utf-8')
-    file_size = unpack('I', archive.read(4))[0]
+    # original_file_size = unpack('I', archive.read(4))[0]
+    _ = unpack('I', archive.read(4))[0]  # placeholder for original file size
+    encoded_file_size = unpack('I', archive.read(4))[0]
 
     output_path = path.join(output_folder, relative_path)
     makedirs(path.dirname(output_path), exist_ok=True)
 
     with open(output_path, 'wb') as f:
-        f.write(archive.read(file_size))
+        f.write(archive.read(encoded_file_size))
+
+    # file decoding function
 
 
 def decode(archive_path: str, output_folder: str) -> None:

@@ -63,12 +63,15 @@ def create_file_header_part(file_info: tuple[str, str]) -> bytes:
     relative_path, full_path = file_info
     relative_path = relative_path.encode('utf-8')
     relative_path_length = pack('H', len(relative_path))
-    file_size = pack('I', path.getsize(full_path))
+    original_file_size = pack('I', path.getsize(full_path))
+
+    # file encoding function
+    encoded_file_size = pack('I', path.getsize(full_path))
 
     with open(full_path, 'rb') as f:
         file_content = f.read()
 
-    return relative_path_length + relative_path + file_size + file_content
+    return relative_path_length + relative_path + original_file_size + encoded_file_size + file_content
 
 
 def encode(files_paths: set[str], archive_path: str) -> None:
