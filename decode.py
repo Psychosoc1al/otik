@@ -25,7 +25,7 @@ def check_hashsum(archive: BinaryIO) -> bool:
     archive_checksum = unpack('I', archive.read(4))[0]
     archive.seek(0)
     new_checksum = crc32(archive.read()[:-4])
-    archive.seek(0)
+    archive.seek(8)
 
     if archive_checksum != new_checksum:
         print('Invalid checksum')
@@ -34,7 +34,8 @@ def check_hashsum(archive: BinaryIO) -> bool:
     return True
 
 
-def check_signature(signature: bytes) -> bool:
+def check_signature(archive: BinaryIO) -> bool:
+    signature = archive.read(8)
     if signature != SIGNATURE:
         print('Invalid signature')
         return False
@@ -52,14 +53,13 @@ def check_algorithms_codes(algorithms_codes: int, allowed_algorithms_codes: int)
     return True
 
 
-def read_starting_header_part(archive: BinaryIO) -> tuple[bytes, int, int, int, int]:
-    signature = archive.read(8)
+def read_starting_header_part(archive: BinaryIO) -> tuple[int, int, int, int]:
     version = unpack('B', archive.read(1))[0]
     algorithms_codes = unpack('B', archive.read(1))[0]
     extra_fields_amount = read_extra_fields_header_part(archive)  # placeholder to read 1 byte
     file_count = unpack('H', archive.read(2))[0]
 
-    return signature, version, algorithms_codes, extra_fields_amount, file_count
+    return version, algorithms_codes, extra_fields_amount, file_count
 
 
 def read_extra_fields_header_part(archive: BinaryIO) -> int:
@@ -93,13 +93,13 @@ def decode(archive_path: str, output_folder: str) -> None:
         return
 
     with open(archive_path, 'rb') as archive:
+        if not check_signature(archive):
+            return
+
         if not check_hashsum(archive):
             return
 
-        signature, _, algorithms_codes, _, file_count = read_starting_header_part(archive)
-
-        if not check_signature(signature):
-            return
+        _, algorithms_codes, _, file_count = read_starting_header_part(archive)
 
         if not check_algorithms_codes(algorithms_codes, 0):
             return
