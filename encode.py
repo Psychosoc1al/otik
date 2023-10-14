@@ -49,9 +49,18 @@ def preprocess_files_and_folders(file_paths: set[str]) -> set[tuple[str, str]]:
 
         elif path.isdir(file_path):
             base_folder = file_path.replace(path.basename(file_path), '')
+            preprocessed_file_paths.add(
+                (path.basename(file_path), path.join(base_folder, file_path))
+            )
             for root, dirs, files in walk(file_path):
+                print('root', root, 'dirs', dirs, 'files', files, 'base_folder', base_folder)
                 for file in files:
                     full_path = path.join(root, file)
+                    preprocessed_file_paths.add(
+                        (path.relpath(full_path, base_folder), full_path)
+                    )
+                for ldir in dirs:
+                    full_path = path.join(root, ldir)
                     preprocessed_file_paths.add(
                         (path.relpath(full_path, base_folder), full_path)
                     )
@@ -63,15 +72,19 @@ def create_file_header_part(file_info: tuple[str, str]) -> bytes:
     relative_path, full_path = file_info
     relative_path = relative_path.encode('utf-8')
     relative_path_length = pack('H', len(relative_path))
-    original_file_size = pack('I', path.getsize(full_path))
 
-    # file encoding function
-    encoded_file_size = pack('I', path.getsize(full_path))
+    if path.isfile(full_path):
+        original_file_size = pack('I', path.getsize(full_path))
 
-    with open(full_path, 'rb') as f:
-        file_content = f.read()
+        # file encoding function
+        encoded_file_size = pack('I', path.getsize(full_path))
 
-    return relative_path_length + relative_path + original_file_size + encoded_file_size + file_content
+        with open(full_path, 'rb') as f:
+            file_content = f.read()
+
+        return relative_path_length + relative_path + original_file_size + encoded_file_size + file_content
+    else:
+        return relative_path_length + relative_path + pack('I', 1) + pack('I', 0) + b''
 
 
 def encode(files_paths: set[str], archive_path: str) -> None:
