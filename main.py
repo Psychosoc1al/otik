@@ -6,7 +6,7 @@ if __name__ == '__main__':
     action = input('Encode or Decode? (e/d): ')
 
     if action in 'eу':
-        files_paths = set(input('Enter file [full or relative] paths separated by vertical bar (|): ').split('|'))
+        files_paths = set(input('Enter targets [full or relative] paths separated by vertical bar (|): ').split('|'))
         archive_path = input('Enter archive [full or relative] path: ')
         encode(files_paths, archive_path)
     elif action in 'dв':

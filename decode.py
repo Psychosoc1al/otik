@@ -57,9 +57,9 @@ def read_starting_header_part(archive: BinaryIO) -> tuple[int, int, int, int]:
     version = unpack('B', archive.read(1))[0]
     algorithms_codes = unpack('B', archive.read(1))[0]
     extra_fields_amount = read_extra_fields_header_part(archive)  # placeholder to read 1 byte
-    file_count = unpack('H', archive.read(2))[0]
+    target_count = unpack('H', archive.read(2))[0]
 
-    return version, algorithms_codes, extra_fields_amount, file_count
+    return version, algorithms_codes, extra_fields_amount, target_count
 
 
 def read_extra_fields_header_part(archive: BinaryIO) -> int:
@@ -72,21 +72,21 @@ def read_extra_fields_header_part(archive: BinaryIO) -> int:
     return extra_fields_amount
 
 
-def unpack_and_save_file(archive: BinaryIO, output_folder: str) -> None:
+def unpack_and_save_target(archive: BinaryIO, output_folder: str) -> None:
     relative_path_length = unpack('H', archive.read(2))[0]
     relative_path = archive.read(relative_path_length).decode('utf-8')
-    original_file_size = unpack('I', archive.read(4))[0]
-    encoded_file_size = unpack('I', archive.read(4))[0]
-    if original_file_size + encoded_file_size == 1:
+    original_target_size = unpack('I', archive.read(4))[0]
+    encoded_target_size = unpack('I', archive.read(4))[0]
+    if original_target_size + encoded_target_size == 1:
         relative_path += '/'
 
     output_path = path.join(output_folder, relative_path)
     makedirs(path.dirname(output_path), exist_ok=True)
 
-    if original_file_size + encoded_file_size != 1:
+    if original_target_size + encoded_target_size != 1:
         with open(output_path, 'wb') as f:
             # file decoding function
-            f.write(archive.read(encoded_file_size))
+            f.write(archive.read(encoded_target_size))
 
 
 def decode(archive_path: str, output_folder: str) -> None:
@@ -100,10 +100,10 @@ def decode(archive_path: str, output_folder: str) -> None:
         if not check_hashsum(archive):
             return
 
-        _, algorithms_codes, _, file_count = read_starting_header_part(archive)
+        _, algorithms_codes, _, target_count = read_starting_header_part(archive)
 
         if not check_algorithms_codes(algorithms_codes, 0):
             return
 
-        for _ in range(file_count):
-            unpack_and_save_file(archive, output_folder)
+        for _ in range(target_count):
+            unpack_and_save_target(archive, output_folder)

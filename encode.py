@@ -11,23 +11,23 @@ from constants import SIGNATURE, VERSION
 #       I for unsigned int,     4 bytes
 
 
-def check_input(file_paths: set[str]) -> bool:
-    for file_path in file_paths:
-        if not path.exists(file_path):
-            print(f'Invalid file/folder path: {file_path}')
+def check_input(targets: set[str]) -> bool:
+    for target_path in targets:
+        if not path.exists(target_path):
+            print(f'Invalid target path: {target_path}')
             return False
 
     return True
 
 
-def create_starting_header_part(file_paths: set[tuple[str, str]]) -> bytes:
+def create_starting_header_part(targets: set[tuple[str, str]]) -> bytes:
     signature = SIGNATURE
     version = pack('B', VERSION)
     algorithms_codes = pack('B', 0)
     extra_fields_data = create_extra_fields_header_part()
-    file_count = pack('H', len(file_paths))
+    target_count = pack('H', len(targets))
 
-    return signature + version + algorithms_codes + extra_fields_data + file_count
+    return signature + version + algorithms_codes + extra_fields_data + target_count
 
 
 def create_extra_fields_header_part() -> bytes:
@@ -38,38 +38,33 @@ def create_extra_fields_header_part() -> bytes:
 
 
 # divides folders into files, converts paths to relative
-def preprocess_files_and_folders(file_paths: set[str]) -> set[tuple[str, str]]:
-    preprocessed_file_paths = set()
+def preprocess_targets(targets: set[str]) -> set[tuple[str, str]]:
+    preprocessed_targets = set()
 
-    for file_path in file_paths:
-        if path.isfile(file_path):
-            preprocessed_file_paths.add(
-                (path.basename(file_path), file_path)
+    for target in targets:
+        if path.isfile(target):
+            preprocessed_targets.add(
+                (path.basename(target), target)
             )
 
-        elif path.isdir(file_path):
-            base_folder = file_path.replace(path.basename(file_path), '')
-            preprocessed_file_paths.add(
-                (path.basename(file_path), path.join(base_folder, file_path))
-            )
-            for root, dirs, files in walk(file_path):
-                print('root', root, 'dirs', dirs, 'files', files, 'base_folder', base_folder)
+        elif path.isdir(target):
+            absolute_target_folder = path.abspath(target)
+            target_parent_dir = path.dirname(absolute_target_folder)
+            for root, dirs, files in walk(absolute_target_folder):
                 for file in files:
-                    full_path = path.join(root, file)
-                    preprocessed_file_paths.add(
-                        (path.relpath(full_path, base_folder), full_path)
+                    absolute_target_file_path = path.join(root, file)
+                    preprocessed_targets.add(
+                        (path.relpath(absolute_target_file_path, target_parent_dir), absolute_target_file_path)
                     )
-                for ldir in dirs:
-                    full_path = path.join(root, ldir)
-                    preprocessed_file_paths.add(
-                        (path.relpath(full_path, base_folder), full_path)
-                    )
+                preprocessed_targets.add(
+                    (path.relpath(root, target_parent_dir), root)
+                )
 
-    return preprocessed_file_paths
+    return preprocessed_targets
 
 
-def create_file_header_part(file_info: tuple[str, str]) -> bytes:
-    relative_path, full_path = file_info
+def create_target_header_part(target_info: tuple[str, str]) -> bytes:
+    relative_path, full_path = target_info
     relative_path = relative_path.encode('utf-8')
     relative_path_length = pack('H', len(relative_path))
 
@@ -87,19 +82,19 @@ def create_file_header_part(file_info: tuple[str, str]) -> bytes:
         return relative_path_length + relative_path + pack('I', 1) + pack('I', 0) + b''
 
 
-def encode(files_paths: set[str], archive_path: str) -> None:
-    if not check_input(files_paths):
+def encode(targets_paths: set[str], archive_path: str) -> None:
+    if not check_input(targets_paths):
         return
 
-    files_info = preprocess_files_and_folders(files_paths)
+    targets_info = preprocess_targets(targets_paths)
 
     with open(archive_path, 'a+b') as archive:
-        starting_header_part = create_starting_header_part(files_info)
+        starting_header_part = create_starting_header_part(targets_info)
         archive.write(starting_header_part)
 
-        for file_info in files_info:
-            file_header_part = create_file_header_part(file_info)
-            archive.write(file_header_part)
+        for target_info in targets_info:
+            target_header_part = create_target_header_part(target_info)
+            archive.write(target_header_part)
 
         archive.seek(0)
         checksum = pack('I', crc32(archive.read()))
