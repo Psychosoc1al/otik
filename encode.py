@@ -57,7 +57,7 @@ def preprocess_targets(targets: set[str]) -> set[tuple[str, str]]:
                         (path.relpath(absolute_target_file_path, target_parent_dir), absolute_target_file_path)
                     )
                 preprocessed_targets.add(
-                    (path.relpath(root, target_parent_dir), root)
+                    (path.relpath(root, target_parent_dir) + path.sep, root)
                 )
 
     return preprocessed_targets
