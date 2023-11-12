@@ -51,22 +51,31 @@ class Tree:
         else:
             return *(self._left.__get_array(code + '0')), *(self._right.__get_array(code + '1'))
 
-    # Генерирует дерево по списку пар (символ или узел дерева, количество)
+    # Генерирует дерево по списку пар (символ, количество)
     # Возвращает корень дерева
     @staticmethod
     def generate_tree(array):
-        arr = list(filter(lambda x: x[1] != 0, array))
-        l = len(arr)
-        while len(arr) > 1:
-            arr = sorted(arr, key=lambda x: (x[1], (int(ord(x[0])) + l) if (type(x[0]) != Tree) else x[0].index), reverse=True)
-            s = Tree(arr[-2][0], arr[-1][0])
-            count = arr[-2][1] + arr[-1][1]
-            arr = arr[:-2]
-            arr.append((s, count))
-        return arr[0][0]
+        l = len(array)
+        arr = sorted(array, key=lambda x: (x[1], int(ord(x[0])) + l), reverse=True)
+        return Tree.__recursion(arr)
+
+    @staticmethod
+    def __recursion(array):
+        if len(array) == 1:
+            return array[0][0]
+        else:
+            min = sum([x[1] for x in array])
+            i = 1
+            while min > abs(sum([x[1] for x in array[i:]]) - sum([x[1] for x in array[:i]])):
+                min = abs(sum([x[1] for x in array[i:]]) - sum([x[1] for x in array[:i]]))
+                i += 1
+            i -= 1
+            arr1 = array[:i]
+            arr2 = array[i:]
+            return Tree(Tree.__recursion(array[:i]), Tree.__recursion(array[i:]))
 
 
-# Кодирует сообщение по алгоритму Хаффмана
+# Кодирует сообщение по алгоритму Шеннона-Фано
 # На входе - сообщение в символах
 # На выходе - сообщение в бинарном виде
 def encode_haf_mes(message):
@@ -80,7 +89,7 @@ def encode_haf_mes(message):
     return message1
 
 
-# Декодирует сообщение по алгоритму Хаффмана
+# Декодирует сообщение по алгоритму Шеннона-Фано
 # На входе - сообщение в бинарном виде и таблица частот
 # На выходе - сообщение в символах
 def decode_haf_mes(message1, table):
@@ -95,11 +104,15 @@ def decode_haf_mes(message1, table):
         if type(t) != Tree:
             message2 += t
             t = tree
-
     return message2
 
 
-# TODO:
-# продумать формат архива
-# приспособить к работе с файлами
-# подключить к основной программе
+if __name__ == '__main__':
+    with open('picture.bmp', 'rb') as f:
+        message = f.read()
+    message = ''.join([chr(x) for x in message])
+    # message = "3242567520675462"
+    print(message)
+    c = Counter(message)
+    table = list(map(tuple, [(x, c[x]) for x in c]))
+    print(decode_haf_mes(encode_haf_mes(message), [(x, c[x]) for x in c]))
